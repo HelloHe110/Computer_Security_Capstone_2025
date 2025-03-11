@@ -1,0 +1,1 @@
+google-chrome --ignore-certificate-errors --user-data-dir=/tmp/chrome_dev
