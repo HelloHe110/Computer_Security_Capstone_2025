@@ -1,0 +1,20 @@
+CC = g++
+CFLAGS = -Wall -Wextra -std=c++17
+LIBS = -lpthread -lnetfilter_queue -ltins
+
+all: icmp_redirect pharm_attack
+	echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
+	echo 0 | sudo tee /proc/sys/net/ipv4/conf/*/send_redirects
+	@sudo iptables -F
+	@sudo iptables -I FORWARD -p udp --dport 53 -j NFQUEUE --queue-num 0
+
+Force:
+
+icmp_redirect: Force
+	$(CC) $(CFLAGS) -o icmp_redirect icmp_redirect.cpp $(LIBS)
+
+pharm_attack: Force
+	$(CC) $(CFLAGS) -o pharm_attack pharm_attack.cpp $(LIBS)
+
+clean:
+	rm -f icmp_redirect pharm_attack
