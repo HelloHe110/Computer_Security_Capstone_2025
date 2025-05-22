@@ -1,0 +1,57 @@
+version: '3'
+services:
+  password_checker: 
+    build: ./password_checker/
+    volumes:
+      - ./password_checker/password_checker:/home/password_checker:ro
+    ports:
+      - "30170:8888"
+    environment:
+      - FLAG=CSC2025{SAMPLE_FLAG}
+  secure_random: 
+    build: ./secure_random/
+    volumes:
+      - ./secure_random/secure_random:/home/secure_random:ro
+    ports:
+      - "30171:8888"
+    environment:
+      - FLAG=CSC2025{SAMPLE_FLAG}
+  simple_shell: 
+    build: ./simple_shell/
+    volumes:
+      - ./simple_shell/simple_shell:/home/simple_shell:ro
+    ports:
+      - "30172:8888"
+  simple_rop: 
+    build: ./simple_rop/
+    volumes:
+      - ./simple_rop/simple_rop:/home/simple_rop:ro
+    ports:
+      - "30173:8888"
+    environment:
+      - FLAG=CSC2025{SAMPLE_FLAG}
+  ret2flag:
+    build: ./ret2flag/
+    volumes:
+      - ./ret2flag/ret2flag:/home/ret2flag:ro
+    ports:
+      - "30174:8888"
+    environment:
+      - FLAG=CSC2025{SAMPLE_FLAG}
+  simple_rtos:
+    build: ./simple_rtos/
+    volumes:
+      - ./simple_rtos/simple_rtos:/home/simple_rtos:ro
+    ports:
+      - "30175:8888"
+    environment:
+      - FLAG=CSC2025{SAMPLE_FLAG}
+  hard_rop:
+    build: ./hard_rop/
+    volumes:
+      - ./hard_rop/hard_rop:/home/hard_rop:ro
+    ports:
+      - "30176:8888"
+      
+  
+    
