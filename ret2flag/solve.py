@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pwn import *
+from pwn import u64, p64
 
 # Set up pwntools for the correct architecture
 context.binary = './ret2flag'
