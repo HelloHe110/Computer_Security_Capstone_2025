@@ -28,6 +28,74 @@ csc_hw2/
 └── README.md               # 基本說明
 ```
 
+## 攻擊流程圖 (Attack Flow Diagrams)
+
+### DNS Spoofing Attack Flow
+```mermaid
+sequenceDiagram
+    participant V as 受害者
+    participant A as 攻擊者
+    participant D as DNS 伺服器
+    participant M as 惡意伺服器
+    
+    V->>A: DNS 查詢 (www.nycu.edu.tw)
+    A->>A: 檢查目標域名
+    A->>A: 建立偽造 DNS 回應
+    A->>V: 偽造 DNS 回應 (140.113.24.241)
+    V->>M: HTTP 請求 (被重定向到惡意伺服器)
+    M->>V: 惡意回應
+```
+
+### ICMP Redirect Attack Flow
+```mermaid
+sequenceDiagram
+    participant V as 受害者
+    participant A as 攻擊者
+    participant G as 網關
+    participant T as 目標伺服器
+    
+    A->>A: 掃描網段設備
+    A->>A: 讀取 ARP 表
+    A->>V: ICMP 重定向封包
+    Note over V: 受害者接受重定向
+    V->>A: 流量重定向到攻擊者
+    A->>T: 轉發流量到目標
+    T->>A: 回應流量
+    A->>V: 轉發回應給受害者
+```
+
+## 快速開始 (Quick Start)
+
+### 編譯和設定
+```bash
+# 編譯所有程式
+make all
+
+# 設定受害者環境
+./victim_config.sh
+```
+
+### DNS Spoofing Attack
+```bash
+# 基本使用
+sudo ./he110_pharm
+
+# 指定網路介面
+sudo ./he110_pharm <interface_name>
+```
+
+### ICMP Redirect Attack
+```bash
+# 指定目標 IP 和網路介面
+sudo ./icmp_redirect <target_ip> <interface_name>
+```
+
+### 受害者設定
+```bash
+# 啟用 ICMP 重定向接受
+./victim_config.sh
+```
+
 ## 程式碼分析 (Code Analysis)
 
 ### 1. DNS Spoofing Attack (`he110_pharm.cpp`)
@@ -134,70 +202,6 @@ void send_icmp_redirect(const std::string& iface_name,
 }
 ```
 
-## 使用方式 (Usage Instructions)
-
-### 編譯程式
-```bash
-make all
-```
-
-### DNS Spoofing Attack
-```bash
-# 基本使用
-sudo ./he110_pharm
-
-# 指定網路介面
-sudo ./he110_pharm <interface_name>
-```
-
-### ICMP Redirect Attack
-```bash
-# 指定目標 IP 和網路介面
-sudo ./icmp_redirect <target_ip> <interface_name>
-```
-
-### 受害者設定
-```bash
-# 啟用 ICMP 重定向接受
-./victim_config.sh
-```
-
-## 攻擊流程圖 (Attack Flow Diagram)
-
-### DNS Spoofing Attack Flow
-```mermaid
-sequenceDiagram
-    participant V as 受害者
-    participant A as 攻擊者
-    participant D as DNS 伺服器
-    participant M as 惡意伺服器
-    
-    V->>A: DNS 查詢 (www.nycu.edu.tw)
-    A->>A: 檢查目標域名
-    A->>A: 建立偽造 DNS 回應
-    A->>V: 偽造 DNS 回應 (140.113.24.241)
-    V->>M: HTTP 請求 (被重定向到惡意伺服器)
-    M->>V: 惡意回應
-```
-
-### ICMP Redirect Attack Flow
-```mermaid
-sequenceDiagram
-    participant V as 受害者
-    participant A as 攻擊者
-    participant G as 網關
-    participant T as 目標伺服器
-    
-    A->>A: 掃描網段設備
-    A->>A: 讀取 ARP 表
-    A->>V: ICMP 重定向封包
-    Note over V: 受害者接受重定向
-    V->>A: 流量重定向到攻擊者
-    A->>T: 轉發流量到目標
-    T->>A: 回應流量
-    A->>V: 轉發回應給受害者
-```
-
 ## 技術細節 (Technical Details)
 
 ### DNS Spoofing 技術
@@ -299,3 +303,7 @@ sequenceDiagram
 4. 教育用戶安全最佳實踐
 
 記住，知識本身是中性的，關鍵在於如何正確使用這些知識來保護而非破壞網路安全。
+
+---
+
+**詳細技術分析請參考**: [ATTACK_METHODS_ANALYSIS.md](./ATTACK_METHODS_ANALYSIS.md)

