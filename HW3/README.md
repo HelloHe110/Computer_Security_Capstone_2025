@@ -32,6 +32,40 @@ csc_hw3/
 └── csc-project3.pdf      # 專案需求文件
 ```
 
+## 攻擊流程圖 (Attack Flow Diagram)
+
+### 完整攻擊流程
+```mermaid
+sequenceDiagram
+    participant A as 攻擊者
+    participant S as 攻擊伺服器
+    participant V as 受害者系統
+    
+    Note over A: 1. 準備攻擊
+    A->>A: 編譯勒索軟體
+    A->>A: 準備密碼字典
+    
+    Note over A: 2. 啟動攻擊伺服器
+    A->>S: 啟動攻擊伺服器
+    
+    Note over A: 3. SSH 暴力破解
+    A->>V: 嘗試 SSH 登入
+    V-->>A: 認證失敗/成功
+    
+    Note over A: 4. 部署惡意軟體
+    A->>V: 上傳勒索軟體
+    V->>V: 執行勒索軟體
+    
+    Note over V: 5. 檔案加密
+    V->>S: 下載加密工具
+    V->>V: 加密 JPG 檔案
+    V->>S: 下載勒索訊息
+    V->>V: 顯示勒索訊息
+    
+    Note over V: 6. 偽裝執行
+    V->>V: 執行原始 echo 命令
+```
+
 ## 程式碼分析 (Code Analysis)
 
 ### 1. Ransomware Attack (`echo.c`)
@@ -339,40 +373,6 @@ def start_server():
 - 建立 TCP 伺服器
 - 提供惡意軟體下載
 - 記錄攻擊活動
-
-## 攻擊流程圖 (Attack Flow Diagram)
-
-### 完整攻擊流程
-```mermaid
-sequenceDiagram
-    participant A as 攻擊者
-    participant S as 攻擊伺服器
-    participant V as 受害者系統
-    
-    Note over A: 1. 準備攻擊
-    A->>A: 編譯勒索軟體
-    A->>A: 準備密碼字典
-    
-    Note over A: 2. 啟動攻擊伺服器
-    A->>S: 啟動攻擊伺服器
-    
-    Note over A: 3. SSH 暴力破解
-    A->>V: 嘗試 SSH 登入
-    V-->>A: 認證失敗/成功
-    
-    Note over A: 4. 部署惡意軟體
-    A->>V: 上傳勒索軟體
-    V->>V: 執行勒索軟體
-    
-    Note over V: 5. 檔案加密
-    V->>S: 下載加密工具
-    V->>V: 加密 JPG 檔案
-    V->>S: 下載勒索訊息
-    V->>V: 顯示勒索訊息
-    
-    Note over V: 6. 偽裝執行
-    V->>V: 執行原始 echo 命令
-```
 
 ## 技術細節 (Technical Details)
 
