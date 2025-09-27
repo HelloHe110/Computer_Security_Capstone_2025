@@ -1,163 +1,227 @@
-# CSC HW4 CTF 專案文檔索引
+# CSC HW4 - CTF (Capture The Flag) 專案
 
-## 文檔概覽
+## 專案概述
 
-本索引提供了 CSC HW4 CTF 專案所有文檔的完整導航，幫助學習者快速找到所需的技術資訊和學習資源。
+CSC HW4 是一個綜合性的網路安全 CTF (Capture The Flag) 競賽專案，包含 7 個不同類型的漏洞挑戰。每個挑戰都設計用來測試參賽者在不同網路安全領域的技能，包括二進制漏洞利用、密碼學攻擊、記憶體安全、以及系統安全等。
 
-## 主要文檔
+## 挑戰類型分析
 
-### 1. 專案概述文檔
-- **檔案**: `README_DOCUMENTATION.md`
-- **內容**: 專案整體介紹、挑戰類型分析、環境設置、學習目標
-- **適用對象**: 初學者、專案管理者
-- **關鍵章節**:
-  - 專案概述
-  - 挑戰類型分析 (7個挑戰)
-  - 技術細節與安全影響分析
-  - 專案結構
-  - 環境設置指南
-  - 挑戰端口映射
-  - 攻擊工具與技術
-  - 防護措施
-  - 法律聲明
-  - 學習目標
+**詳細技術分析請參考**: [VULNERABILITY_ANALYSIS.md](./VULNERABILITY_ANALYSIS.md)
 
-### 2. 漏洞分析文檔
-- **檔案**: `VULNERABILITY_ANALYSIS.md`
-- **內容**: 詳細的漏洞技術分析、攻擊向量、防護機制
-- **適用對象**: 安全研究員、滲透測試員、開發者
-- **關鍵章節**:
-  - Password Checker - 整數溢出漏洞
-  - Simple Shell - 緩衝區溢出與結構體覆蓋
-  - Simple ROP - 返回導向程式設計
-  - Ret2Flag - 簡單返回地址覆蓋
-  - Secure Random - 密碼學弱點
-  - Simple RTOS - 格式化字串漏洞
-  - Hard ROP - 複雜 ROP 攻擊
-  - 通用防護策略
-  - 檢測與響應
+### 1. Password Checker (密碼檢查器) - ⭐
+- **漏洞類型**: 整數溢出 (Integer Overflow)
+- **技術細節**: 使用 `int8_t` 類型儲存字串長度，當輸入超過 127 字元時會發生整數溢出，導致負數比較觸發 flag 顯示
+- **攻擊向量**: 發送 256 字元的 payload 使 `strlen()` 返回值溢出為負數
+- **端口**: 30170
 
-### 3. 漏洞利用與防護技術指南
-- **檔案**: `EXPLOITATION_DEFENSE_GUIDE.md`
-- **內容**: 完整的漏洞利用技術和防護機制實戰指南
-- **適用對象**: 進階學習者、安全專家、系統管理員
-- **關鍵章節**:
-  - 漏洞利用技術 (5大類)
-  - 防護機制 (編譯時、運行時、程式設計、系統級)
-  - 實戰技巧 (漏洞發現、利用、防護繞過)
-  - 工具與資源
+### 2. Simple Shell (簡單殼層) - ⭐⭐
+- **漏洞類型**: 緩衝區溢出 (Buffer Overflow) + 結構體覆蓋
+- **技術細節**: 註冊功能中的 `strcpy()` 操作可能覆蓋相鄰的 `admin` 結構體，導致權限提升
+- **攻擊向量**: 精心構造用戶名和密碼來覆蓋 `admin` 結構體，然後以 admin 身份登入執行系統命令
+- **端口**: 30172
 
-## 挑戰詳細分析
+### 3. Simple ROP (簡單 ROP 攻擊) - ⭐⭐⭐
+- **漏洞類型**: 返回導向程式設計 (Return-Oriented Programming)
+- **技術細節**: 經典的 ROP 鏈構造，利用現有的程式碼片段 (gadgets) 來執行 shellcode
+- **攻擊向量**: 構造 ROP 鏈調用 `execve("/bin/sh", NULL, NULL)` 來獲得 shell 存取權限
+- **端口**: 30173
 
-### 1. Password Checker (密碼檢查器)
-- **難度**: ⭐
-- **漏洞類型**: 整數溢出
-- **關鍵技術**: 整數溢出利用、邊界檢查繞過
-- **相關文檔**: 
-  - 概述: `README_DOCUMENTATION.md` - 挑戰類型分析
-  - 技術分析: `VULNERABILITY_ANALYSIS.md` - 第1章
-  - 利用技術: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第1節
+### 4. Ret2Flag (返回至 Flag 函數) - ⭐⭐
+- **漏洞類型**: 簡單的返回地址覆蓋
+- **技術細節**: 直接覆蓋返回地址跳轉到 `putFlag()` 函數
+- **攻擊向量**: 利用緩衝區溢出覆蓋返回地址，直接跳轉到目標函數
+- **端口**: 30174
 
-### 2. Simple Shell (簡單殼層)
-- **難度**: ⭐⭐
-- **漏洞類型**: 緩衝區溢出 + 結構體覆蓋
-- **關鍵技術**: 記憶體佈局分析、結構體覆蓋、權限提升
-- **相關文檔**:
-  - 概述: `README_DOCUMENTATION.md` - 挑戰類型分析
-  - 技術分析: `VULNERABILITY_ANALYSIS.md` - 第2章
-  - 利用技術: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第2節
+### 5. Secure Random (安全隨機數) - ⭐⭐
+- **漏洞類型**: 密碼學弱點 (Cryptographic Weakness)
+- **技術細節**: 使用 `time(NULL)` 作為隨機數種子，使得隨機數可預測
+- **攻擊向量**: 重現相同的隨機數生成算法來預測輸出值
+- **端口**: 30171
 
-### 3. Simple ROP (簡單 ROP 攻擊)
-- **難度**: ⭐⭐⭐
-- **漏洞類型**: 返回導向程式設計
-- **關鍵技術**: ROP 鏈構造、Gadget 搜尋、系統調用
-- **相關文檔**:
-  - 概述: `README_DOCUMENTATION.md` - 挑戰類型分析
-  - 技術分析: `VULNERABILITY_ANALYSIS.md` - 第3章
-  - 利用技術: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第3節
+### 6. Simple RTOS (簡單即時作業系統) - ⭐⭐⭐
+- **漏洞類型**: 格式化字串漏洞 (Format String Vulnerability)
+- **技術細節**: `printf(buf)` 直接輸出用戶輸入，沒有格式字串驗證
+- **攻擊向量**: 利用格式化字串漏洞讀取或寫入記憶體
+- **端口**: 30175
 
-### 4. Ret2Flag (返回至 Flag 函數)
-- **難度**: ⭐⭐
-- **漏洞類型**: 簡單返回地址覆蓋
-- **關鍵技術**: 返回地址覆蓋、函數跳轉
-- **相關文檔**:
-  - 概述: `README_DOCUMENTATION.md` - 挑戰類型分析
-  - 技術分析: `VULNERABILITY_ANALYSIS.md` - 第4章
-  - 利用技術: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第2節
+### 7. Hard ROP (困難 ROP 攻擊) - ⭐⭐⭐⭐⭐
+- **漏洞類型**: 複雜的 ROP 攻擊 + 多層緩衝區溢出
+- **技術細節**: 需要處理多個保護機制，包括 NX、ASLR、Stack Canaries 等
+- **攻擊向量**: 構造複雜的 ROP 鏈來繞過各種保護機制
+- **端口**: 30176
 
-### 5. Secure Random (安全隨機數)
-- **難度**: ⭐⭐
-- **漏洞類型**: 密碼學弱點
-- **關鍵技術**: 隨機數預測、密碼學攻擊
-- **相關文檔**:
-  - 概述: `README_DOCUMENTATION.md` - 挑戰類型分析
-  - 技術分析: `VULNERABILITY_ANALYSIS.md` - 第5章
-  - 利用技術: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第5節
+## 專案結構
 
-### 6. Simple RTOS (簡單即時作業系統)
-- **難度**: ⭐⭐⭐
-- **漏洞類型**: 格式化字串漏洞
-- **關鍵技術**: 格式化字串利用、記憶體讀寫、GOT 劫持
-- **相關文檔**:
-  - 概述: `README_DOCUMENTATION.md` - 挑戰類型分析
-  - 技術分析: `VULNERABILITY_ANALYSIS.md` - 第6章
-  - 利用技術: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第4節
+```
+csc_hw4/
+├── docker-compose.yaml          # Docker 容器編排配置
+├── cmd.md                       # 命令使用說明
+├── README.md                    # 基本專案說明
+├── 2025csc-project4-ctf.pdf     # 專案需求文檔
+├── password_checker/            # 密碼檢查器挑戰
+├── simple_shell/               # 簡單殼層挑戰
+├── simple_rop/                 # 簡單 ROP 挑戰
+├── ret2flag/                   # 返回至 Flag 挑戰
+├── secure_random/              # 安全隨機數挑戰
+├── simple_rtos/                # 簡單 RTOS 挑戰
+└── hard_rop/                   # 困難 ROP 挑戰
+```
 
-### 7. Hard ROP (困難 ROP 攻擊)
-- **難度**: ⭐⭐⭐⭐⭐
-- **漏洞類型**: 複雜 ROP 攻擊
-- **關鍵技術**: 多層保護繞過、記憶體洩露、複雜 ROP 鏈
-- **相關文檔**:
-  - 概述: `README_DOCUMENTATION.md` - 挑戰類型分析
-  - 技術分析: `VULNERABILITY_ANALYSIS.md` - 第7章
-  - 利用技術: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第3節
+## 快速開始
 
-## 技術主題索引
+### 環境設置
 
-### 漏洞類型
-- **整數溢出**: `VULNERABILITY_ANALYSIS.md` - 第1章
-- **緩衝區溢出**: `VULNERABILITY_ANALYSIS.md` - 第2、4、7章
-- **ROP 攻擊**: `VULNERABILITY_ANALYSIS.md` - 第3、7章
-- **格式化字串**: `VULNERABILITY_ANALYSIS.md` - 第6章
-- **密碼學弱點**: `VULNERABILITY_ANALYSIS.md` - 第5章
+#### 1. 建構映像檔
+```bash
+docker compose build
+```
+
+#### 2. 啟動容器環境
+```bash
+docker compose up -d
+```
+
+#### 3. 連接容器
+```bash
+docker exec -it <container_name> bash
+```
+
+#### 4. 停止環境
+```bash
+docker compose down
+```
+
+### 挑戰端口映射
+
+- **Password Checker**: 30170
+- **Secure Random**: 30171  
+- **Simple Shell**: 30172
+- **Simple ROP**: 30173
+- **Ret2Flag**: 30174
+- **Simple RTOS**: 30175
+- **Hard ROP**: 30176
+
+## 技術細節與安全影響分析
+
+此 CTF 專案涵蓋了現代軟體安全中最常見和危險的漏洞類型，包括記憶體安全問題（緩衝區溢出、格式化字串漏洞）、密碼學實現錯誤（可預測隨機數）、以及進階攻擊技術（ROP 攻擊）。這些漏洞可能導致任意程式碼執行、權限提升、敏感資料洩露、以及系統完全被攻陷。
+
+從安全影響角度來看，這些攻擊可能造成受害者的系統被完全控制、敏感資料被竊取、服務被中斷、以及可能被用作進一步攻擊的跳板。
+
+## 攻擊工具與技術
+
+### 常用工具
+- **pwntools**: Python 漏洞利用框架
+- **ROPgadget**: ROP gadgets 搜尋工具
+- **gdb**: GNU 除錯器
+- **objdump**: 二進制檔案分析工具
+- **strings**: 字串提取工具
 
 ### 攻擊技術
-- **記憶體洩露**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第3節
-- **Gadget 搜尋**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第3節
-- **ROP 鏈構造**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第3節
-- **格式化字串利用**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第4節
-- **密碼學攻擊**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分第5節
+- **Buffer Overflow**: 緩衝區溢出攻擊
+- **ROP (Return-Oriented Programming)**: 返回導向程式設計
+- **Format String Attack**: 格式化字串攻擊
+- **Integer Overflow**: 整數溢出攻擊
+- **Cryptographic Attacks**: 密碼學攻擊
 
-### 防護機制
-- **編譯時保護**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第2部分第1節
-- **運行時保護**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第2部分第2節
-- **程式設計最佳實踐**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第2部分第3節
-- **系統級防護**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第2部分第4節
+## 漏洞利用技術
 
-### 工具與資源
-- **漏洞利用工具**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第4部分第1節
-- **防護工具**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第4部分第2節
-- **學習資源**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第4部分第3節
+### 1. 整數溢出利用
+
+#### 技術原理
+整數溢出發生在算術運算結果超出資料類型所能表示的範圍時。
+
+#### 利用示例
+```c
+// 漏洞代碼
+int8_t len;
+char buffer[256];
+fgets(buffer, 256, stdin);
+len = strlen(buffer);  // 可能溢出
+
+// 利用方法
+payload = b'A' * 256  // 觸發 strlen() 返回 256
+         # 轉換為 int8_t 時變成 -128
+         # 滿足 len < 0 的條件
+```
+
+### 2. 緩衝區溢出利用
+
+#### 技術原理
+緩衝區溢出是最經典的記憶體安全漏洞，發生在程式向緩衝區寫入超過其容量的資料時。
+
+#### 利用技術
+- **返回地址覆蓋**: 覆蓋函數返回地址跳轉到惡意代碼
+- **結構體覆蓋**: 覆蓋相鄰的資料結構
+- **ROP 攻擊**: 利用現有代碼片段構造攻擊鏈
+
+### 3. ROP 攻擊
+
+#### 技術原理
+ROP (Return-Oriented Programming) 是一種進階的攻擊技術，利用現有的程式碼片段 (gadgets) 來構造攻擊鏈。
+
+#### 利用步驟
+1. **Gadget 搜尋**: 尋找可用的程式碼片段
+2. **鏈構造**: 將 gadgets 組合成攻擊鏈
+3. **參數設置**: 設置系統調用參數
+4. **執行**: 執行構造的 ROP 鏈
+
+### 4. 格式化字串攻擊
+
+#### 技術原理
+格式化字串漏洞發生在程式直接將用戶輸入作為格式化字串參數傳遞給 `printf` 等函數時。
+
+#### 利用技術
+- **記憶體讀取**: 使用 `%x` 等格式符讀取記憶體
+- **記憶體寫入**: 使用 `%n` 格式符寫入記憶體
+- **GOT 劫持**: 修改 GOT 表項來劫持函數調用
+
+## 防護措施
+
+### 編譯器保護
+- **ASLR (Address Space Layout Randomization)**: 地址空間隨機化
+- **DEP/NX (Data Execution Prevention)**: 資料執行防護
+- **Stack Canaries**: 堆疊保護機制
+- **CFI (Control Flow Integrity)**: 控制流完整性
+
+### 程式設計最佳實踐
+- **輸入驗證**: 嚴格驗證所有用戶輸入
+- **邊界檢查**: 確保陣列和緩衝區存取在合法範圍內
+- **安全記憶體管理**: 使用安全的記憶體操作函數
+- **密碼學安全**: 使用經過驗證的密碼學庫和算法
+
+### 防護機制實現
+
+#### 編譯時保護
+```bash
+# 啟用所有保護機制
+gcc -fstack-protector-strong -fPIE -pie -Wl,-z,relro,-z,now -D_FORTIFY_SOURCE=2
+```
+
+#### 運行時保護
+```c
+// 使用安全的字串函數
+strncpy(dest, src, sizeof(dest) - 1);
+dest[sizeof(dest) - 1] = '\0';
+
+// 邊界檢查
+if (len < 0 || len >= MAX_SIZE) {
+    return ERROR_INVALID_LENGTH;
+}
+```
 
 ## 學習路徑建議
 
 ### 初學者路徑
-1. **開始**: `README_DOCUMENTATION.md` - 專案概述
-2. **基礎**: `VULNERABILITY_ANALYSIS.md` - 第1、2、4、5章
-3. **進階**: `VULNERABILITY_ANALYSIS.md` - 第3、6、7章
-4. **實戰**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1部分
+1. **開始**: 專案概述和基本概念
+2. **基礎**: Password Checker, Ret2Flag, Secure Random
+3. **進階**: Simple Shell, Simple ROP, Simple RTOS
+4. **專家**: Hard ROP
 
 ### 進階學習者路徑
-1. **深入分析**: `VULNERABILITY_ANALYSIS.md` - 全部章節
-2. **技術實戰**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第1、3部分
-3. **防護機制**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第2部分
-4. **工具使用**: `EXPLOITATION_DEFENSE_GUIDE.md` - 第4部分
-
-### 安全專家路徑
-1. **全面理解**: 所有文檔的完整閱讀
-2. **深度研究**: 特定漏洞類型的深入研究
-3. **創新應用**: 結合實際環境的技術應用
-4. **防護設計**: 基於文檔內容的防護體系設計
+1. **深入分析**: 詳細的漏洞技術分析
+2. **技術實戰**: 漏洞利用技術實踐
+3. **防護機制**: 防護機制設計和實現
+4. **工具使用**: 專業工具的使用
 
 ## 快速參考
 
@@ -189,23 +253,16 @@ ROPgadget --binary ./target --only 'pop|ret'
 - **AddressSanitizer**: 記憶體錯誤檢測
 - **AFL**: 模糊測試工具
 
-## 文檔維護
+## 學習目標
 
-### 更新記錄
-- **v1.0**: 初始版本，包含所有基礎文檔
-- **v1.1**: 添加詳細的技術分析
-- **v1.2**: 完善防護機制指南
-- **v1.3**: 優化學習路徑和索引結構
+通過完成這些 CTF 挑戰，學習者將能夠：
 
-### 貢獻指南
-1. 遵循現有的文檔結構和格式
-2. 確保技術內容的準確性和完整性
-3. 提供清晰的代碼示例和解釋
-4. 保持文檔的一致性和可讀性
+1. **理解常見漏洞類型**: 掌握緩衝區溢出、格式化字串、整數溢出等常見漏洞的原理
+2. **學習攻擊技術**: 了解 ROP、格式化字串攻擊等進階攻擊技術
+3. **掌握防護機制**: 學習現代編譯器保護機制和安全程式設計實踐
+4. **提升安全意識**: 培養安全程式設計思維和漏洞分析能力
+5. **實踐技能應用**: 在實際環境中應用所學的安全知識和技能
 
-### 反饋與建議
-如有任何問題、建議或改進意見，請通過適當的渠道反饋，以便持續改進文檔品質。
+## 法律聲明
 
----
-
-*本索引提供了 CSC HW4 CTF 專案文檔的完整導航，幫助學習者根據自己的需求和水平選擇合適的學習路徑。*
+本專案僅供教育和學習目的使用。所有攻擊技術和漏洞利用方法都應該在合法的環境中進行測試，不得用於任何惡意目的。使用者需要遵守相關法律法規，並對自己的行為負責。

