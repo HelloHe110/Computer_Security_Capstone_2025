@@ -278,7 +278,7 @@ cat README.md
 如有問題或建議，請通過適當的渠道聯絡：
 
 - **課程**: Computer Security Capstone 2025
-- **機構**: [Your Institution Name]
+- **機構**: NYCU
 - **學期**: 2025 Spring
 
 ## 授權條款 (License)
